@@ -1,0 +1,49 @@
+classDiagram
+    direction TB
+
+    class ClientShort {
+        +FIELDS: tuple$
+        +OPTIONAL_FIELDS: tuple$
+        +STRING_SEPARATOR: str$
+        -__client_id: int
+        -__last_name: str
+        -__first_name: str
+        -__patronymic: str | None
+        -__phone: str
+        +client_id: int «property»
+        +last_name: str «property»
+        +first_name: str «property»
+        +patronymic: str | None «property»
+        +phone: str «property»
+        +full_name: str «property, read-only»
+        +short_name: str «property, read-only»
+        +#95;#95;init#95;#95;(*args, **kwargs)
+        +from_client(client)$ ClientShort
+        +to_dict() dict
+        +short_str() str
+        +#95;#95;str#95;#95;() str
+        +#95;#95;repr#95;#95;() str
+        +#95;#95;eq#95;#95;(other) bool
+        #_bind_arguments(args, kwargs)$ dict
+        #_parse(data)$ dict
+        #_parse_json(text)$ dict
+        #_parse_separated(text)$ dict
+        #_validate_string(value, field_name, max_length, pattern, required)$ str | None
+        +validate_client_id(value)$ int
+        +validate_last_name(value)$ str
+        +validate_first_name(value)$ str
+        +validate_patronymic(value)$ str | None
+        +validate_phone(value)$ str
+    }
+
+    class Client {
+        +FIELDS: tuple$
+        -__address: str
+        +address: str «property»
+        +to_short() ClientShort
+        +#95;#95;str#95;#95;() str
+        +validate_address(value)$ str
+    }
+
+    ClientShort <|-- Client : наследование
+    Client ..> ClientShort : to_short() создаёт
