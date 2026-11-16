@@ -1,6 +1,7 @@
 """Демонстрация работы класса Client."""
 
 from client import Client
+from client_short import ClientShort
 
 
 def try_create(*args, **kwargs):
@@ -42,6 +43,13 @@ def main():
     print("ivanov == same: ", ivanov == same)
     print("ivanov == other:", ivanov == other)
     print("ivanov is same: ", ivanov is same)
+
+    print("\nКраткая версия (ClientShort):")
+    short = ClientShort.from_client(ivanov)
+    print(short)
+    print(repr(short))
+    print("short == ClientShort(...):",
+          short == ClientShort(1, "Иванов", "Иван", "Иванович", "+79161234567"))
 
     print("\nНекорректное присваивание:")
     client = Client(1, "Иванов", "Иван", "Иванович", "+79161234567", "г. Москва")
