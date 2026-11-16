@@ -2,6 +2,11 @@
 
 import re
 
+NAME_PATTERN = re.compile(r"[А-ЯЁA-Z][а-яёa-z]+(?:-[А-ЯЁA-Z][а-яёa-z]+)?")
+PHONE_PATTERN = re.compile(r"(?:\+7|8)\d{10}")
+NAME_MAX_LENGTH = 50
+ADDRESS_MAX_LENGTH = 200
+
 
 class Client:
     """Клиент туристической фирмы.
@@ -24,6 +29,27 @@ class Client:
     # ---------- статические методы валидации ----------
 
     @staticmethod
+    def _validate_string(value, field_name, max_length, pattern=None, required=True):
+        """Общая проверка строкового поля.
+
+        Возвращает очищенное значение; для необязательного пустого поля — None.
+        """
+        if value is None and not required:
+            return None
+        if not isinstance(value, str):
+            raise TypeError(f"Поле «{field_name}» должно быть строкой")
+        value = value.strip()
+        if not value:
+            if required:
+                raise ValueError(f"Поле «{field_name}» не может быть пустым")
+            return None
+        if len(value) > max_length:
+            raise ValueError(f"Поле «{field_name}» длиннее {max_length} символов")
+        if pattern is not None and not pattern.fullmatch(value):
+            raise ValueError(f"Поле «{field_name}» имеет неверный формат: {value!r}")
+        return value
+
+    @staticmethod
     def validate_client_id(value):
         if isinstance(value, bool) or not isinstance(value, int):
             raise TypeError("ID клиента должен быть целым числом")
@@ -33,66 +59,27 @@ class Client:
 
     @staticmethod
     def validate_last_name(value):
-        if not isinstance(value, str):
-            raise TypeError("Фамилия должна быть строкой")
-        value = value.strip()
-        if not value:
-            raise ValueError("Фамилия не может быть пустой")
-        if len(value) > 50:
-            raise ValueError("Фамилия длиннее 50 символов")
-        if not re.fullmatch(r"[А-ЯЁA-Z][а-яёa-z]+(?:-[А-ЯЁA-Z][а-яёa-z]+)?", value):
-            raise ValueError(f"Фамилия имеет неверный формат: {value!r}")
-        return value
+        return Client._validate_string(value, "Фамилия", NAME_MAX_LENGTH, NAME_PATTERN)
 
     @staticmethod
     def validate_first_name(value):
-        if not isinstance(value, str):
-            raise TypeError("Имя должно быть строкой")
-        value = value.strip()
-        if not value:
-            raise ValueError("Имя не может быть пустым")
-        if len(value) > 50:
-            raise ValueError("Имя длиннее 50 символов")
-        if not re.fullmatch(r"[А-ЯЁA-Z][а-яёa-z]+(?:-[А-ЯЁA-Z][а-яёa-z]+)?", value):
-            raise ValueError(f"Имя имеет неверный формат: {value!r}")
-        return value
+        return Client._validate_string(value, "Имя", NAME_MAX_LENGTH, NAME_PATTERN)
 
     @staticmethod
     def validate_patronymic(value):
-        if value is None:
-            return None
-        if not isinstance(value, str):
-            raise TypeError("Отчество должно быть строкой")
-        value = value.strip()
-        if not value:
-            return None
-        if len(value) > 50:
-            raise ValueError("Отчество длиннее 50 символов")
-        if not re.fullmatch(r"[А-ЯЁA-Z][а-яёa-z]+(?:-[А-ЯЁA-Z][а-яёa-z]+)?", value):
-            raise ValueError(f"Отчество имеет неверный формат: {value!r}")
-        return value
+        return Client._validate_string(value, "Отчество", NAME_MAX_LENGTH, NAME_PATTERN,
+                                       required=False)
 
     @staticmethod
     def validate_phone(value):
-        if not isinstance(value, str):
-            raise TypeError("Телефон должен быть строкой")
-        value = re.sub(r"[\s()\-]", "", value)
-        if not value:
-            raise ValueError("Телефон не может быть пустым")
-        if not re.fullmatch(r"(?:\+7|8)\d{10}", value):
-            raise ValueError(f"Телефон имеет неверный формат: {value!r}")
+        if isinstance(value, str):
+            value = re.sub(r"[\s()\-]", "", value)
+        value = Client._validate_string(value, "Телефон", 12, PHONE_PATTERN)
         return "+7" + value[-10:]
 
     @staticmethod
     def validate_address(value):
-        if not isinstance(value, str):
-            raise TypeError("Адрес должен быть строкой")
-        value = value.strip()
-        if not value:
-            raise ValueError("Адрес не может быть пустым")
-        if len(value) > 200:
-            raise ValueError("Адрес длиннее 200 символов")
-        return value
+        return Client._validate_string(value, "Адрес", ADDRESS_MAX_LENGTH)
 
     # ---------- свойства ----------
 
