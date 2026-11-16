@@ -1,5 +1,6 @@
 """Сущность «Клиент» туристической фирмы."""
 
+import json
 import re
 
 NAME_PATTERN = re.compile(r"[А-ЯЁA-Z][а-яёa-z]+(?:-[А-ЯЁA-Z][а-яёa-z]+)?")
@@ -18,13 +19,75 @@ class Client:
     с недопустимыми значениями полей создать невозможно.
     """
 
-    def __init__(self, client_id, last_name, first_name, patronymic, phone, address):
-        self.client_id = client_id
-        self.last_name = last_name
-        self.first_name = first_name
-        self.patronymic = patronymic
-        self.phone = phone
-        self.address = address
+    # Порядок полей: используется в позиционном конструкторе и в строковом формате.
+    FIELDS = ("client_id", "last_name", "first_name", "patronymic", "phone", "address")
+    OPTIONAL_FIELDS = ("patronymic",)
+    STRING_SEPARATOR = ";"
+
+    def __init__(self, *args, **kwargs):
+        """Перегруженный конструктор.
+
+        Варианты вызова:
+            Client(1, "Иванов", "Иван", "Иванович", "+79161234567", "г. Москва")
+            Client(client_id=1, last_name="Иванов", ...)
+            Client("1;Иванов;Иван;Иванович;+79161234567;г. Москва")
+            Client('{"client_id": 1, "last_name": "Иванов", ...}')
+            Client({"client_id": 1, "last_name": "Иванов", ...})
+        """
+        if len(args) == 1 and not kwargs and isinstance(args[0], (str, dict)):
+            args, kwargs = (), self._parse(args[0])
+        values = self._bind_arguments(args, kwargs)
+        for field in self.FIELDS:
+            setattr(self, field, values[field])
+
+    @classmethod
+    def _bind_arguments(cls, args, kwargs):
+        """Сопоставляет позиционные и именованные аргументы с полями."""
+        if len(args) > len(cls.FIELDS):
+            raise TypeError(f"Ожидается не более {len(cls.FIELDS)} аргументов, "
+                            f"передано {len(args)}")
+        values = dict(zip(cls.FIELDS, args))
+        for name, value in kwargs.items():
+            if name not in cls.FIELDS:
+                raise TypeError(f"Неизвестное поле: {name!r}")
+            if name in values:
+                raise TypeError(f"Поле {name!r} передано дважды")
+            values[name] = value
+        for field in cls.OPTIONAL_FIELDS:
+            values.setdefault(field, None)
+        missing = [field for field in cls.FIELDS if field not in values]
+        if missing:
+            raise TypeError(f"Не заданы поля: {', '.join(missing)}")
+        return values
+
+    @classmethod
+    def _parse(cls, data):
+        """Разбирает словарь, JSON-строку или строку с разделителем в словарь полей."""
+        if isinstance(data, dict):
+            return dict(data)
+        text = data.strip()
+        if text.startswith("{"):
+            return cls._parse_json(text)
+        return cls._parse_separated(text)
+
+    @staticmethod
+    def _parse_json(text):
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as error:
+            raise ValueError(f"Некорректный JSON: {error}") from error
+        if not isinstance(data, dict):
+            raise ValueError("JSON должен описывать объект")
+        return data
+
+    @classmethod
+    def _parse_separated(cls, text):
+        # Последнее поле (адрес) может само содержать разделитель — ограничиваем split.
+        parts = text.split(cls.STRING_SEPARATOR, len(cls.FIELDS) - 1)
+        if len(parts) != len(cls.FIELDS):
+            raise ValueError(f"Строка должна содержать {len(cls.FIELDS)} полей, "
+                             f"разделённых {cls.STRING_SEPARATOR!r}")
+        return dict(zip(cls.FIELDS, (part.strip() for part in parts)))
 
     # ---------- статические методы валидации ----------
 
@@ -51,6 +114,8 @@ class Client:
 
     @staticmethod
     def validate_client_id(value):
+        if isinstance(value, str) and value.strip().isdigit():
+            value = int(value)
         if isinstance(value, bool) or not isinstance(value, int):
             raise TypeError("ID клиента должен быть целым числом")
         if value <= 0:

@@ -3,26 +3,35 @@
 from client import Client
 
 
-def try_create(*args):
+def try_create(*args, **kwargs):
     try:
-        client = Client(*args)
-        print("Создан:", client.last_name, client.phone)
+        client = Client(*args, **kwargs)
+        print("Создан:", client.client_id, client.last_name, client.phone, client.address)
     except (TypeError, ValueError) as error:
         print("Ошибка:", error)
 
 
 def main():
-    client = Client(1, "Иванов", "Иван", "Иванович", "8 (916) 123-45-67", "г. Москва, ул. Ленина, д. 1")
-    print(client.client_id, client.last_name, client.first_name,
-          client.patronymic, client.phone, client.address)
+    print("Перегрузка конструктора:")
+    try_create(1, "Иванов", "Иван", "Иванович", "8 (916) 123-45-67", "г. Москва, ул. Ленина, д. 1")
+    try_create(client_id=2, last_name="Петрова", first_name="Анна",
+               phone="+79035556677", address="г. Казань")
+    try_create("3; Сидоров; Олег; ; +79261112233; г. Тверь; ул. Мира, 5")
+    try_create('{"client_id": 4, "last_name": "Смирнов", "first_name": "Павел", '
+               '"patronymic": "Олегович", "phone": "+79991234567", "address": "г. Сочи"}')
+    try_create({"client_id": "5", "last_name": "Кузнецова", "first_name": "Мария",
+                "patronymic": None, "phone": "89005554433", "address": "г. Омск"})
 
     print("\nНекорректные данные:")
     try_create(0, "Петров", "Пётр", None, "+79160000000", "г. Тула")
     try_create(2, "петров", "Пётр", None, "+79160000000", "г. Тула")
     try_create(3, "Петров", "Пётр", None, "12345", "г. Тула")
-    try_create(4, "Петров", "Пётр", None, "+79160000000", "   ")
+    try_create("6;Орлов;Илья")
+    try_create('{"client_id": 7, ')
+    try_create(8, "Орлов", "Илья", None, "+79160000000")
 
     print("\nНекорректное присваивание:")
+    client = Client(1, "Иванов", "Иван", "Иванович", "+79161234567", "г. Москва")
     try:
         client.phone = "abc"
     except ValueError as error:
