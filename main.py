@@ -45,11 +45,17 @@ def main():
     print("ivanov is same: ", ivanov is same)
 
     print("\nКраткая версия (ClientShort):")
-    short = ClientShort.from_client(ivanov)
+    short = ivanov.to_short()
     print(short)
     print(repr(short))
-    print("short == ClientShort(...):",
-          short == ClientShort(1, "Иванов", "Иван", "Иванович", "+79161234567"))
+    print("short == ClientShort(строка):",
+          short == ClientShort("1;Иванов;Иван;Иванович;+79161234567"))
+    print("short == ivanov:", short == ivanov)
+
+    print("\nИерархия наследования:")
+    print("Client.__mro__:", [cls.__name__ for cls in Client.__mro__])
+    print("isinstance(ivanov, ClientShort):", isinstance(ivanov, ClientShort))
+    print("Краткий вывод полного объекта:", ivanov.short_str())
 
     print("\nНекорректное присваивание:")
     client = Client(1, "Иванов", "Иван", "Иванович", "+79161234567", "г. Москва")
