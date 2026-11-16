@@ -89,6 +89,44 @@ class Client:
                              f"разделённых {cls.STRING_SEPARATOR!r}")
         return dict(zip(cls.FIELDS, (part.strip() for part in parts)))
 
+    # ---------- вывод и сравнение ----------
+
+    @property
+    def full_name(self):
+        """Фамилия Имя Отчество."""
+        parts = (self.last_name, self.first_name, self.patronymic)
+        return " ".join(part for part in parts if part)
+
+    @property
+    def short_name(self):
+        """Фамилия И. О."""
+        initials = " ".join(f"{part[0]}." for part in (self.first_name, self.patronymic) if part)
+        return f"{self.last_name} {initials}"
+
+    def to_dict(self):
+        return {field: getattr(self, field) for field in self.FIELDS}
+
+    def __str__(self):
+        """Полная версия объекта."""
+        return (f"Клиент #{self.client_id}: {self.full_name}, "
+                f"тел.: {self.phone}, адрес: {self.address}")
+
+    def short_str(self):
+        """Краткая версия объекта."""
+        return f"{self.short_name}, тел.: {self.phone}"
+
+    def __repr__(self):
+        args = ", ".join(f"{field}={value!r}" for field, value in self.to_dict().items())
+        return f"{type(self).__name__}({args})"
+
+    def __eq__(self, other):
+        if type(self) is not type(other):
+            return NotImplemented
+        return self.to_dict() == other.to_dict()
+
+    # Объект изменяемый, поэтому хешировать его нельзя (иначе сломаются множества/словари).
+    __hash__ = None
+
     # ---------- статические методы валидации ----------
 
     @staticmethod

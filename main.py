@@ -30,6 +30,19 @@ def main():
     try_create('{"client_id": 7, ')
     try_create(8, "Орлов", "Илья", None, "+79160000000")
 
+    print("\nПолный и краткий вывод:")
+    ivanov = Client(1, "Иванов", "Иван", "Иванович", "+79161234567", "г. Москва, ул. Ленина, д. 1")
+    print(ivanov)
+    print(ivanov.short_str())
+    print(repr(ivanov))
+
+    print("\nСравнение:")
+    same = Client("1;Иванов;Иван;Иванович;8 916 123 45 67;г. Москва, ул. Ленина, д. 1")
+    other = Client(2, "Иванов", "Иван", None, "+79161234567", "г. Москва")
+    print("ivanov == same: ", ivanov == same)
+    print("ivanov == other:", ivanov == other)
+    print("ivanov is same: ", ivanov is same)
+
     print("\nНекорректное присваивание:")
     client = Client(1, "Иванов", "Иван", "Иванович", "+79161234567", "г. Москва")
     try:
